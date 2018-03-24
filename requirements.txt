@@ -1,0 +1,8 @@
+beautifulsoup4
+youtube-dl
+pycaption
+dash==0.21.0  # The core dash backend
+dash-renderer==0.11.3  # The dash front-end
+dash-html-components==0.9.0  # HTML components
+dash-core-components==0.21.0  # Supercharged components
+plotly # Plotly graphing library used in examples
