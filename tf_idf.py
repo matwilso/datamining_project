@@ -28,7 +28,9 @@ N = len(id_to_filename)
 # read all text files for all papers into memory 
 # (to filter out short and long videos)
 good_txt_paths = []
-good_id_to_filename = collections.OrderedDict()
+# NOTE: this must be an OrderedDict so that we can keep the order to load later
+# (it would probably be good to write some unit tests to verify ordering)
+good_id_to_filename = collections.OrderedDict() 
 n = 0
 for id in id_to_filename:
   n += 1
@@ -36,7 +38,7 @@ for id in id_to_filename:
   txt_path = data_path+filename+'.txt'
   with open(txt_path, 'r') as f:
     txt = f.read()
-    if len(txt) > 2000 and len(txt) < 500000: # 500K is VERY conservative upper bound
+    if len(txt) > 1000 and len(txt) < 500000: # 500K is VERY conservative upper bound
       good_txt_paths.append(txt_path) 
       good_id_to_filename[id] = id_to_filename[id]
       print("read {}/{} ({}) with {} chars".format(n, len(id_to_filename), filename, len(txt)))
