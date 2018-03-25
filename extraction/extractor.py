@@ -16,7 +16,7 @@ Usage:
 
     1. move your YouTube folder from Takeout into ../ from this script
 
-    2. `python3 extractor.py`
+    2. `python3 extractor.py` # this takes a LONG time
 
     3. 
     ```
