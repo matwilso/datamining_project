@@ -25,7 +25,14 @@ Usage:
     mkdir data
     mv *.txt data/
     mv *.jpg data/
+
+    4.
     ```
+    cd ..
+    python3 tf_idf.py
+    ```
+
+    5. Open Jupyter notebook to Plotting.ipynb or Plotting-copy
 """
 # TODO: give option for checkpoints
 # TODO: save also the publisher of the video
