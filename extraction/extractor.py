@@ -4,6 +4,9 @@ import json
 from bs4 import BeautifulSoup
 import youtube_dl
 from pycaption import DFXPReader
+from concurrent.futures import ThreadPoolExecutor
+
+THREAD_COUNT = 32
 
 """
 Grab the captions from every video in a YouTube watch-history.html from Google Takeout
@@ -46,11 +49,21 @@ def timeit(func):
         return func_out
     return wrapper
 
+def partition(data, pcount):
+    plen = int(len(data) / pcount)
+    result = []
+    current = 0
+    for i in range(pcount-1):
+        result.append(data[current:current+plen])
+        current += plen
+    result.append(data[current:])
+    return result
+
 @timeit
 def download_captions():
     # GRAB LINKS
     watch_history_path = '../YouTube/history/watch-history.html'
-    soup = BeautifulSoup(open(watch_history_path), 'html.parser')
+    soup = BeautifulSoup(open(watch_history_path, encoding='utf8'), 'html.parser')
     links = [link.text for link in soup.find_all('a')] # grab links
     links = list(set(links)) # remove dupes
     print("Found {} unique video links in watch-history.html".format(len(links))) 
@@ -86,9 +99,19 @@ def download_captions():
         'logger': logger,
         'progress_hooks': [progress_hook],
     }
-    # DOWNLOAD CAPTIONS AND THUMBNAILS
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download(links)
+    def download_links(links):
+        # DOWNLOAD CAPTIONS AND THUMBNAILS
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([links])
+    with ThreadPoolExecutor(max_workers=THREAD_COUNT) as executor:
+        executor.map(download_links, links)
+    # threads = [Thread(target=download_links, args=(new_links,)) for new_links in partition(links, THREAD_COUNT)]
+    # for t in threads:
+    #     t.daemon = True
+    #     t.start()
+    # for t in threads:
+    #     t.join()
+    
 
 def find_valid_files():
     pass
@@ -118,13 +141,13 @@ def parse_captions(path='./'):
         # check if file exists. if not, this video has no autocaptions
         if os.path.isfile(ttml_file) and os.path.isfile(image_file):
             good_id_to_filename[id] = id_to_filename[id]
-            with open(ttml_file, 'r') as f:
+            with open(ttml_file, 'r', encoding='utf8') as f:
                 ttml_txt = f.read()
                 caption_set = cap_reader.read(ttml_txt)
                 captions = caption_set.get_captions('en-US')
                 caption_text = ' '.join([caption.get_text() if caption is not None else '' \
                                                             for caption in captions])
-            with open(text_file, 'w') as f:
+            with open(text_file, 'w', encoding='utf8') as f:
                 f.write(caption_text)
             if n % 100 == 0:
                 print("{}/{} captions grabbed".format(n, N))
