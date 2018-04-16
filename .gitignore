@@ -2,12 +2,12 @@
 *.swo
 
 YouTube/
-extraction/*.txt
-extraction/*.ttml
-extraction/*.jpg
-extraction/data/*.txt
-extraction/data/*.ttml
-extraction/data/*.jpg
+extraction/**.txt
+extraction/**.ttml
+extraction/**.jpg
+extraction/**data/*.txt
+extraction/*data/*.ttml
+extraction/*data/*.jpg
 *.csv
 *.json
 

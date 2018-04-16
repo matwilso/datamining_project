@@ -65,7 +65,11 @@ def download_captions():
     watch_history_path = '../YouTube/history/watch-history.html'
     soup = BeautifulSoup(open(watch_history_path, encoding='utf8'), 'html.parser')
     links = [link.attrs['href'] for link in soup.find_all('a')] # grab links
-    links = list(set(links)) # remove dupes
+    tmp_links = []
+    for link in links:
+        if not '.com/channel/' in link:
+            tmp_links.append(link)
+    links = list(set(tmp_links)) # remove dupes
     print("Found {} unique video links in watch-history.html".format(len(links))) 
     # GET IDS AND TITLES OF ALL VIDEOS
     class Logger(object):
