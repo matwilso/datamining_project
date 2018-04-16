@@ -5,6 +5,34 @@ from bs4 import BeautifulSoup
 import youtube_dl
 from pycaption import DFXPReader
 from concurrent.futures import ThreadPoolExecutor
+import sqlite3
+
+DB_NAME = '../captions.db'
+
+def init_db():
+    # Tables:
+    # files(name)
+    # video(id, name, image, transcript) % Technically denormalized a bit for convenience.
+    # transcription(vid, start, end, text)
+    with sqlite3.connect(DB_NAME) as conn:
+        curr = conn.cursor()
+        curr.execute('''
+        CREATE TABLE video(
+            name TEXT NOT NULL,
+            image_name TEXT,
+            transcript TEXT NOT NULL,
+            youtube_id INTEGER NOT NULL
+        )
+            ''')
+        curr.execute('''
+        CREATE TABLE transcription(
+            video INTEGER NOT NULL,
+            start INTEGER NOT NULL,
+            stop INTEGER NOT NULL,
+            caption TEXT NOT NULL
+        )
+        ''')
+        conn.commit()
 
 THREAD_COUNT = 32
 
@@ -116,6 +144,10 @@ def download_captions():
 def find_valid_files():
     pass
 
+def read_bin(name):
+    with open(name, mode='rb') as f:
+        return f.read()
+
 @timeit
 def parse_captions(path='./'):
     # GRAB ALL VALID CAPTION FILES AND THEIR FILENAMES
@@ -147,6 +179,16 @@ def parse_captions(path='./'):
                 captions = caption_set.get_captions('en-US')
                 caption_text = ' '.join([caption.get_text() if caption is not None else '' \
                                                             for caption in captions])
+            with sqlite3.connect(DB_NAME) as conn:
+                curs = conn.cursor()
+                image_name = id_to_filename[id]+'.jpg'
+                video_name = id_to_filename[id]
+                curs.execute('INSERT INTO video(name, image_name, transcript, youtube_id) VALUES(?, ?, ?, ?)', (video_name, image_name, caption_text, id,))
+                video_id = curs.lastrowid
+                for cap in captions:
+                    if cap is not None:
+                        curs.execute('INSERT INTO transcription(video, start, stop, caption) VALUES(?, ?, ?, ?)', (video_id, cap.start, cap.end, cap.get_text(),))
+                conn.commit()
             with open(text_file, 'w', encoding='utf8') as f:
                 f.write(caption_text)
             if n % 100 == 0:
@@ -157,5 +199,6 @@ def parse_captions(path='./'):
     print("Done.")
 
 if __name__ == '__main__':
-    download_captions()
+    init_db()
+    # download_captions()
     parse_captions(path='./')

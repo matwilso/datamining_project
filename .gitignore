@@ -10,6 +10,7 @@ extraction/data/*.ttml
 extraction/data/*.jpg
 *.csv
 *.json
+*.db
 
 
 
