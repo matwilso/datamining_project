@@ -1,4 +1,7 @@
 import sqlite3
+import time
+
+start_time = time.time()
 
 DB_NAME = 'captions.db'
 
@@ -10,7 +13,7 @@ def js(s1, s2):
 MICRO_IN_MINUTE = 60 * 1000 * 1000
 
 def bag_of_words(string):
-    return set(string.split())
+    return set(word.lower().strip() for word in string.split())
 
 class Caption:
     def __init__(self, caption, video, start, stop):
@@ -61,10 +64,13 @@ with sqlite3.connect(DB_NAME) as conn:
             start = end
             end += MICRO_IN_MINUTE
 
+end_time = time.time()
+print(f'Took {end_time - start_time} seconds to initialize documents.')
 print(f'Searching over {len(captions)} caption documents.')
 while True:
     print('Input a search query:')
     query = input()
+    start_query = time.time()
     query_bag = bag_of_words(query)
     top5 = sorted(captions, key=lambda caption: -js(caption.bag, query_bag))[:5]
     with sqlite3.connect(DB_NAME) as conn:
@@ -73,5 +79,7 @@ while True:
             curs.execute('SELECT youtube_id FROM video WHERE rowid=?', (top.video,))
             yt_id = curs.fetchone()[0]
             print(yt_link(yt_id, top.start))
+    end_query = time.time()
+    print(f'Took {end_query - start_query} seconds to process query.')
 
 

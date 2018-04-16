@@ -200,5 +200,5 @@ def parse_captions(path='./'):
 
 if __name__ == '__main__':
     init_db()
-    # download_captions()
+    download_captions()
     parse_captions(path='./')
